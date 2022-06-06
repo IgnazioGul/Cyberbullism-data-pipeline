@@ -1,0 +1,3 @@
+twitter firehorse 1% del traffico
+a questo vanno applicati algoritmi di ML per arricchire 
+logstash -> kafka -> Spark -> EL -> kibana

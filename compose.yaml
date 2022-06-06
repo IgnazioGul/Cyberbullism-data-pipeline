@@ -1,0 +1,84 @@
+services:
+
+  # logstash:
+  #   build:
+  #     context: .
+  #     dockerfile: logstash/Dockerfile
+  #   container_name: logstash
+  #   depends_on: 
+  #     - kafka-broker
+  #   networks: 
+  #     tap: 
+  #       ipv4_address: 10.0.100.30
+  #   volumes:
+  #     - logstash-pipeline:/usr/share/logstash/pipeline/
+  
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.0.1
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    networks: 
+      tap: 
+        ipv4_address: 10.0.100.31
+
+  kafka-broker:
+    image: confluentinc/cp-kafka:7.0.1
+    container_name: kafka-broker
+    ports:
+      - 9092:9092
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: 10.0.100.31:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092,PLAINTEXT_INTERNAL://kafka-broker:29092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+    networks: 
+      tap: 
+        ipv4_address: 10.0.100.32
+
+  # TODO fix kafka-ui unable to connect to kafka broker 
+  kafka-ui:
+    container_name: kafka-ui
+    image: provectuslabs/kafka-ui:latest
+    ports:
+      - 8080:8080
+    depends_on:
+      - zookeeper
+      - kafka-broker
+    environment:
+      SERVER_PORT: 8080
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: 10.0.100.32:9092
+      KAFKA_CLUSTERS_0_ZOOKEEPER: 10.0.100.31:2181
+    networks: 
+      tap: 
+        ipv4_address: 10.0.100.33
+  #     # KAFKA_CLUSTERS_0_JMXPORT: 9997
+  #     # KAFKA_CLUSTERS_0_SCHEMAREGISTRY: http://schemaregistry0:8085
+  #     # KAFKA_CLUSTERS_0_KAFKACONNECT_0_NAME: first
+  #     # KAFKA_CLUSTERS_0_KAFKACONNECT_0_ADDRESS: http://kafka-connect0:8083
+  #     # KAFKA_CLUSTERS_1_NAME: secondLocal
+  #     # KAFKA_CLUSTERS_1_BOOTSTRAPSERVERS: kafka1:29092
+  #     # KAFKA_CLUSTERS_1_ZOOKEEPER: zookeeper1:2181
+  #     # KAFKA_CLUSTERS_1_JMXPORT: 9998
+  #     # KAFKA_CLUSTERS_1_SCHEMAREGISTRY: http://schemaregistry1:8085
+  #     # KAFKA_CLUSTERS_1_KAFKACONNECT_0_NAME: first
+  #     # KAFKA_CLUSTERS_1_KAFKACONNECT_0_ADDRESS: http://kafka-connect0:8083
+
+volumes:
+  logstash-pipeline: 
+    driver: local
+    driver_opts:
+      o: bind
+      type: none
+      device: C:\Users\Ignazio\OneDrive\Desktop\CDL\Magistrale\I anno\II semestre\TAP\progetto\logstash\pipeline
+
+networks:
+  tap:
+    external: true
