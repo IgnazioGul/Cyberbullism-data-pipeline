@@ -17,7 +17,7 @@ services:
       - 9092:9092
     depends_on:
       - zookeeper
-    environment:
+    environment:  
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
       KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_INTERNAL:PLAINTEXT
@@ -67,7 +67,7 @@ services:
     build:
       context: ./spark-local
       dockerfile: setup-master/Dockerfile 
-    container_name: local-spark-master
+    container_name: spark-master
     ports:
       - "8081:8081" #web ui
       - "7077:7077" # master port
@@ -84,7 +84,7 @@ services:
     build:
       context: ./spark-local
       dockerfile: setup-worker/Dockerfile 
-    container_name: local-spark-worker
+    container_name: spark-worker
     depends_on:
       - spark-master
     ports:
@@ -99,6 +99,19 @@ services:
       tap:
         ipv4_address: 10.0.100.35
   # END spark cluster setup
+  elastic-search: 
+    container_name: elastisearch
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.11.0
+    environment:
+      #disable security eg auth
+      - xpack.security.enabled=false
+      # binds to loopback http for internal communication: must be used when ES is in the same producer machine
+      - discovery.type=single-node
+    networks:
+      tap:
+        ipv4_address: 10.0.100.36
+    ports:
+      - 9200:9200
 
 volumes:
   logstash-pipeline: 
@@ -106,6 +119,7 @@ volumes:
     driver_opts:
       o: bind
       type: none
+      # MODFIY FOR YOUR ENVIRONMENT
       device: C:\Users\IgnazioGulino\Desktop\IG\TAP\progettoTAP\logstash\pipeline
 
 networks:
