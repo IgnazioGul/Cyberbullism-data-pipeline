@@ -1,0 +1,1 @@
+scaricare spark hadoop (della versione corretta, vedi dockerfile spark-worker/master) e inserirlo

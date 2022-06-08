@@ -1,4 +1,5 @@
 services:
+# BEGIN kafka setup
   zookeeper:
     image: confluentinc/cp-zookeeper:7.0.1
     container_name: zookeeper
@@ -46,6 +47,7 @@ services:
     networks: 
       tap: 
         ipv4_address: 10.0.100.33
+# END kafka setup
 
   logstash:
     build:
@@ -59,7 +61,44 @@ services:
         ipv4_address: 10.0.100.30
     volumes:
       - logstash-pipeline:/usr/share/logstash/pipeline/
-  
+
+# BEGIN spark cluster setup
+  spark-master: 
+    build:
+      context: ./spark-local
+      dockerfile: setup-master/Dockerfile 
+    container_name: local-spark-master
+    ports:
+      - "8081:8081" #web ui
+      - "7077:7077" # master port
+      - "4040:4040"
+    environment:
+      SPARK_MASTER_IP: 10.0.100.34
+      SPARK_MASTER_PORT: 7077
+      SPARK_MASTER_PORT_UI: 8081
+    networks:
+      tap:
+        ipv4_address: 10.0.100.34
+        
+  spark-worker: 
+    build:
+      context: ./spark-local
+      dockerfile: setup-worker/Dockerfile 
+    container_name: local-spark-worker
+    depends_on:
+      - spark-master
+    ports:
+      - "8082:8082" # web-ui
+      - "7078:7078" # worker port
+    environment:
+      SPARK_MASTER_IP: 10.0.100.34
+      SPARK_MASTER_PORT: 7077
+      SPARK_WORKER_PORT: 7078
+      SPARK_WORKER_PORT_UI: 8082
+    networks:
+      tap:
+        ipv4_address: 10.0.100.35
+  # END spark cluster setup
 
 volumes:
   logstash-pipeline: 
