@@ -1,5 +1,3 @@
-scaricare spark hadoop (della versione corretta, vedi dockerfile spark-worker/master) e inserirlo in questa cartella
-Per il lancio dello script python verso spark cluster:
 In caso di errore "The system cannot find the path specified" nell'esecuzione degli scripts eg spark-submit, ci sono le possibili soluzioni:
 1: set JAVA_HOME
 2. set SPARK_HOME e suo bin nel PATH
