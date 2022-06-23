@@ -12,18 +12,18 @@ from sparknlp.base import *
 
 
 # RUN: attach shell to spark driver (for easy use) and run 
-# spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1,com.johnsnowlabs.nlp:spark-nlp_2.12:4.0.0 /opt/tap-project/code/twitter_stream_es_service.py
+# spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1,com.johnsnowlabs.nlp:spark-nlp_2.12:4.0.0,org.elasticsearch:elasticsearch-spark-30_2.12:8.2.0 --conf="spark.driver.memory=3G" --conf="spark.executor.memory=4G" /opt/tap-project/code/twitter_stream_es_service.py
 
 # to open worker node on localhost with no stress run -> netsh interface ip add address "Loopback" 10.0.100.35
 
 # ES 7.11 is used so take elasticsearch==8.2.2 version
-spark_master_url = "spark://localhost:7077"
+spark_master_url = "spark://spark-master:7077"
 spark_app_name = "TapProject-TwitterSample"
 
 kafka_url = "kafka-broker:29092"
 kafka_topic = "sample-tweets"
-
-# es = Elasticsearch() 
+elastic_hostname = "elastic-search"
+elastic_index = "tap-cyberbullism-tweets"
 
 # Struct to map df to desidered structure if truncated then pick extended_tweet.full_text, else get only text
 tweetKafkaStruct = tp.StructType([
@@ -39,13 +39,14 @@ tweetKafkaStruct = tp.StructType([
 
 MODEL_NAME='classifierdl_use_cyberbullying'
 
-                        
-sparkConf = SparkConf().set("es.nodes", "elasticsearch") \
-                        .set("es.port", "9200").set("spark.memory.offHeap.enabled",True).set("spark.memory.offHeap.size","4g").set("spark.driver.memory", "1g").set("spark.executor.memory", "6g")
+spark = SparkSession.builder\
+                    .master(spark_master_url)\
+                    .appName(spark_app_name)\
+                    .config("es.index.auto.create", "true") \
+                    .config("es.nodes", elastic_hostname) \
+                    .config("es.port", "9200") \
+                    .getOrCreate()
 
-sc = SparkContext(appName=spark_app_name, conf=sparkConf)
-spark = SparkSession(sc)
-sc.setLogLevel("WARN")
 
 print("*********** Starting kafka stream to console ************")
 # create input DStream from kafka topic
@@ -56,7 +57,6 @@ mode = "earliest"
 df = spark.readStream \
     .format("kafka") \
     .option("kafka.bootstrap.servers", kafka_url) \
-    .option("kafka.group.id", group_id) \
     .option("kafka.session.timeout.ms", 7000) \
     .option("subscribe", kafka_topic) \
     .option("startingOffsets", mode) \
@@ -84,8 +84,7 @@ use = UniversalSentenceEncoder.pretrained(name="tfhub_use", lang="en")\
 
 sentimentdl = ClassifierDLModel.pretrained(name=MODEL_NAME)\
     .setInputCols(["sentence_embeddings"])\
-    .setOutputCol("sentiment")\
-    .setBatchSize(1)
+    .setOutputCol("sentiment")
 
 nlpPipeline = Pipeline(
       stages = [
@@ -98,11 +97,17 @@ pipelineModel = nlpPipeline.fit(tweets_df)
 
 result = pipelineModel.transform(tweets_df)
 
-result = result.select(col('document.result').alias("tweet_text"), col('sentiment.result').alias('cyberbullying_sentiment'))
+result = result.select(col("tweet_text"), col('sentiment.result').alias('cyberbullying_sentiment'), col('timestamp_ms'))
 
-result.writeStream.outputMode("append").format("console").option("truncate", "false").start().awaitTermination()
+# result.writeStream.outputMode("append").format("console").option("truncate", "true").start().awaitTermination()
 
-# insert ouput in es index 
+# Write the stream to elasticsearch
+result.writeStream \
+    .option("checkpointLocation", "/save/location") \
+    .format("es") \
+    .start(elastic_index) \
+    .awaitTermination()
+ 
 
 # start ssc and await termination (error or cancelled by user or by stop() method)
 
