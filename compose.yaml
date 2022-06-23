@@ -87,6 +87,7 @@ services:
         ipv4_address: 10.0.100.34
     volumes:
       - spark-code:/opt/tap-project/code/
+      - nlp-shared:/root/cache_pretrained/
 
         
   spark-worker: 
@@ -107,6 +108,8 @@ services:
     networks:
       tap:
         ipv4_address: 10.0.100.35
+    volumes:
+      - nlp-shared:/root/cache_pretrained/
 
   spark-driver: 
     build:
@@ -118,6 +121,7 @@ services:
         ipv4_address: 10.0.100.38
     volumes:
     - spark-code:/opt/tap-project/code/
+    - nlp-shared:/root/cache_pretrained/
   # END spark cluster setup
 
   elastic-search: 
@@ -162,7 +166,10 @@ volumes:
       type: none
       # MODFIY FOR YOUR ENVIRONMENT
       device: C:\Users\IgnazioGulino\Desktop\IG\TAP\progettoTAP\spark-local\code
+  # used to share pre-trained model
+  nlp-shared:
 
 networks:
   tap:
     external: true
+
