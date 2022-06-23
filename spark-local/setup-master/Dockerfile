@@ -10,6 +10,7 @@ RUN apt-get -y install python3.9
 
 RUN mv /opt/spark-${SPARK_VERSION}-bin-hadoop3.2 ${SPARK_DIR}
 
+ADD setup/spark-defaults.conf ${SPARK_DIR}/conf
 ADD setup-master/spark-env.sh ${SPARK_DIR}/conf
 ADD setup-master/start.sh ${SPARK_DIR}/bin
 

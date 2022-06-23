@@ -13,6 +13,7 @@ RUN mv /opt/spark-${SPARK_VERSION}-bin-hadoop3.2 ${SPARK_DIR}
 RUN mkdir -p tap-project/code
 
 ADD setup-driver/start.sh ${SPARK_DIR}/bin
+ADD setup/spark-defaults.conf ${SPARK_DIR}/conf
 
 RUN sed -i -e 's/\r$//' ${SPARK_DIR}/bin/start.sh
 RUN ["chmod", "+x", "/opt/spark/bin/start.sh"]

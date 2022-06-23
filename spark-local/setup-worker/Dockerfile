@@ -10,6 +10,7 @@ RUN apt-get -y install python3.9
 RUN mv /opt/spark-${SPARK_VERSION}-bin-hadoop3.2 ${SPARK_DIR}
 # add custom start script
 ADD setup-worker/start.sh ${SPARK_DIR}/bin
+ADD setup/spark-defaults.conf ${SPARK_DIR}/conf
 
 # remove windows endline
 RUN sed -i -e 's/\r$//' ${SPARK_DIR}/bin/start.sh
