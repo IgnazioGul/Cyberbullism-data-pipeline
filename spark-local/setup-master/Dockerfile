@@ -15,6 +15,7 @@ ADD setup-master/start.sh ${SPARK_DIR}/bin
 
 # remove windows endline
 RUN sed -i -e 's/\r$//' ${SPARK_DIR}/bin/start.sh
+RUN ["chmod", "+x", "/opt/spark/bin/start.sh"]
 
 # master port
 EXPOSE 7077

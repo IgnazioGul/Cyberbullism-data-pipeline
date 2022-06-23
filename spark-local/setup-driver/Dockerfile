@@ -15,6 +15,7 @@ RUN mkdir -p tap-project/code
 ADD setup-driver/start.sh ${SPARK_DIR}/bin
 
 RUN sed -i -e 's/\r$//' ${SPARK_DIR}/bin/start.sh
+RUN ["chmod", "+x", "/opt/spark/bin/start.sh"]
 
 WORKDIR ${SPARK_DIR}
 ENTRYPOINT [ "start.sh"]
