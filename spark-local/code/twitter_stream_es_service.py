@@ -22,12 +22,39 @@ spark_app_name = "TapProject-TwitterSample"
 
 kafka_url = "kafka-broker:29092"
 kafka_topic = "sample-tweets"
-elastic_hostname = "elastic-search"
+elastic_hostname = "http://elastic-search:9200"
 elastic_index = "tap-cyberbullism-tweets"
+
+
+es_mapping = {
+    "mappings": {
+        "properties": 
+            {
+                "created_at": {"type": "date","format": "EEE MMM dd HH:mm:ss Z yyyy"},
+                "tweet_text": {"type": "text","fielddata": True}
+            }
+    }
+}
+
+es = Elasticsearch(elastic_hostname) 
+
+# make an API call to the Elasticsearch cluster
+# and have it return a response:
+response = es.indices.create(
+    index=elastic_index,
+    body=es_mapping,
+    ignore=400 # ignore 400 already exists code
+)
+
+if 'acknowledged' in response:
+    if response['acknowledged'] == True:
+        print ("INDEX MAPPING SUCCESS FOR INDEX:", response['index'])
+
 
 # Struct to map df to desidered structure if truncated then pick extended_tweet.full_text, else get only text
 tweetKafkaStruct = tp.StructType([
     tp.StructField(name= 'id_str', dataType= tp.StringType()),
+    tp.StructField(name= 'created_at', dataType= tp.StringType()),
     tp.StructField(name= 'timestamp_ms', dataType= tp.StringType()),
     tp.StructField(name= 'lang', dataType= tp.StringType()),
     tp.StructField(name= 'truncated', dataType= tp.BooleanType()),
@@ -42,7 +69,6 @@ MODEL_NAME='classifierdl_use_cyberbullying'
 spark = SparkSession.builder\
                     .master(spark_master_url)\
                     .appName(spark_app_name)\
-                    .config("es.index.auto.create", "true") \
                     .config("es.nodes", elastic_hostname) \
                     .config("es.port", "9200") \
                     .getOrCreate()
@@ -69,7 +95,7 @@ df = df.selectExpr("CAST(value AS STRING)") \
     .select(from_json("value", tweetKafkaStruct).alias("data")) \
     .select("data.*")
 
-tweets_df = df.select(col('id_str'), col('timestamp_ms'), col('lang'), when(col('truncated') == False, col('text')) \
+tweets_df = df.select(col('id_str'), col('timestamp_ms'), col('created_at'), col('lang'), when(col('truncated') == False, col('text')) \
                 .otherwise(col('extended_tweet.full_text')) \
                 .alias('tweet_text')).where(col('lang') == 'en')
 
@@ -97,7 +123,7 @@ pipelineModel = nlpPipeline.fit(tweets_df)
 
 result = pipelineModel.transform(tweets_df)
 
-result = result.select(col("tweet_text"), col('sentiment.result').alias('cyberbullying_sentiment'), col('timestamp_ms'))
+result = result.select(col("tweet_text"), col('sentiment.result').alias('cyberbullying_sentiment'), col('created_at'))
 
 # result.writeStream.outputMode("append").format("console").option("truncate", "true").start().awaitTermination()
 
@@ -111,5 +137,3 @@ result.writeStream \
 
 # start ssc and await termination (error or cancelled by user or by stop() method)
 
-# .writeStream.format("console") \
-    # .start()
