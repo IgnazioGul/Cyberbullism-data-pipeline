@@ -14,15 +14,13 @@ from sparknlp.base import *
 # RUN: attach shell to spark driver (for easy use) and run 
 # spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spark-sql-kafka-0-10_2.12:3.1.1,com.johnsnowlabs.nlp:spark-nlp_2.12:4.0.0,org.elasticsearch:elasticsearch-spark-30_2.12:8.2.0 --conf="spark.driver.memory=3G" --conf="spark.executor.memory=4G" /opt/tap-project/code/twitter_stream_es_service.py
 
-# to open worker node on localhost with no stress run -> netsh interface ip add address "Loopback" 10.0.100.35
-
 # ES 7.11 is used so take elasticsearch==8.2.2 version
 spark_master_url = "spark://spark-master:7077"
 spark_app_name = "TapProject-TwitterSample"
 
 kafka_url = "kafka-broker:29092"
 kafka_topic = "sample-tweets"
-elastic_hostname = "http://elastic-search:9200"
+elastic_hostname = "http://elasticsearch:9200"
 elastic_index = "tap-cyberbullism-tweets"
 
 

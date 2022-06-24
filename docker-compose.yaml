@@ -125,25 +125,27 @@ services:
     - nlp-shared:/root/cache_pretrained/
   # END spark cluster setup
 
-  elastic-search: 
+  elasticsearch: 
     container_name: elastisearch
     image: docker.elastic.co/elasticsearch/elasticsearch:8.2.0
     environment:
-      #disable security eg auth
+      # disable security eg auth
       - xpack.security.enabled=false
       # binds to loopback http for internal communication: must be used when ES is in the same producer machine
       - discovery.type=single-node
+      - ES_JAVA_OPTS=-Xms1g -Xmx1g
     networks:
       tap:
         ipv4_address: 10.0.100.36
     ports:
       - 9200:9200
+      - 9300:9300
+    volumes:
+          - es-data:/usr/share/elasticsearch/data
 
   kibana:
     container_name: kibana
-    image: docker.elastic.co/kibana/kibana:7.11.0
-    environment:
-      - ELASTICSEARCH_HOSTS=http://elastisearch:9200
+    image: docker.elastic.co/kibana/kibana:8.2.0
     networks:
       tap:
         ipv4_address: 10.0.100.37
@@ -155,6 +157,7 @@ services:
 volumes:
 # used to share pre-trained model
   nlp-shared:
+  es-data:
 
 networks:
   tap:
