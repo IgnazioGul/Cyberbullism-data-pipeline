@@ -1,8 +1,5 @@
 FROM docker.elastic.co/logstash/logstash:8.1.0
 
-# Add your logstash plugins setup here
-RUN logstash-plugin install logstash-filter-sentimentalizer
-
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint", "--config.reload.automatic"]
 
 # to build with

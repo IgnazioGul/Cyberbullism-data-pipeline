@@ -59,6 +59,9 @@ tweetKafkaStruct = tp.StructType([
     tp.StructField(name= 'text', dataType= tp.StringType()),
     tp.StructField(name= 'extended_tweet', dataType= tp.StructType([
         tp.StructField(name='full_text', dataType=tp.StringType())
+   ]),  nullable= True),
+   tp.StructField(name= 'user', dataType= tp.StructType([
+        tp.StructField(name='followers_count', dataType=tp.StringType())
    ]),  nullable= True)
 ])
 
@@ -84,6 +87,7 @@ df = spark.readStream \
     .option("kafka.session.timeout.ms", 7000) \
     .option("subscribe", kafka_topic) \
     .option("startingOffsets", mode) \
+    .option("failOnDataLoss", False) \
         .load()
 
 # trasform DStream with spark API
@@ -93,8 +97,11 @@ df = df.selectExpr("CAST(value AS STRING)") \
     .select(from_json("value", tweetKafkaStruct).alias("data")) \
     .select("data.*")
 
-tweets_df = df.select(col('id_str'), col('timestamp_ms'), col('created_at'), col('lang'), when(col('truncated') == False, col('text')) \
-                .otherwise(col('extended_tweet.full_text')) \
+tweets_df = df.select(col('id_str'), col('created_at'), col('user.followers_count').alias('followers_count'), col('lang'),\
+                 when(col('truncated') == False,\
+                    col('text')) \
+                .otherwise(\
+                    col('extended_tweet.full_text')) \
                 .alias('tweet_text')).where(col('lang') == 'en')
 
 # apply spark NLP pipeline
@@ -121,11 +128,11 @@ pipelineModel = nlpPipeline.fit(tweets_df)
 
 result = pipelineModel.transform(tweets_df)
 
-result = result.select(col("tweet_text"), col('sentiment.result').alias('cyberbullying_sentiment'), col('created_at'))
+result = result.select(col("tweet_text"), col('sentiment.result').alias('cyberbullying_sentiment'), col('followers_count'), col('created_at'))
 
-# result.writeStream.outputMode("append").format("console").option("truncate", "true").start().awaitTermination()
 
 # Write the stream to elasticsearch
+# await termination (error or cancelled by user or by stop() method)
 result.writeStream \
     .option("checkpointLocation", "/save/location") \
     .format("es") \
@@ -133,5 +140,4 @@ result.writeStream \
     .awaitTermination()
  
 
-# start ssc and await termination (error or cancelled by user or by stop() method)
 

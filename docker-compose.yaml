@@ -64,6 +64,11 @@ services:
     container_name: logstash
     # depends_on: 
     #   - kafka-broker
+    environment:
+      - LOGSTASH_CONS_KEY=${LOGSTASH_CONS_KEY}
+      - LOGSTASH_CONS_SECRET=${LOGSTASH_CONS_SECRET}
+      - LOGSTASH_OAUTH_KEY=${LOGSTASH_OAUTH_KEY}
+      - LOGSTASH_OAUTH_SECRET=${LOGSTASH_OAUTH_SECRET}
     networks: 
       tap: 
         ipv4_address: 10.0.100.30
@@ -141,7 +146,7 @@ services:
       - 9200:9200
       - 9300:9300
     volumes:
-          - es-data:/usr/share/elasticsearch/data
+      - elasticsearch-data:/usr/share/elasticsearch/data # persist es index data
 
   kibana:
     container_name: kibana
@@ -157,7 +162,7 @@ services:
 volumes:
 # used to share pre-trained model
   nlp-shared:
-  es-data:
+  elasticsearch-data:
 
 networks:
   tap:
