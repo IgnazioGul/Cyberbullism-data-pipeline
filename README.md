@@ -12,7 +12,7 @@ In order to compose data-pipeline, the following architecture has been used:
 * **Logstash**: data ingestion tool to ingest 1% twitter firehorse sample. [Official twitter doc](https://developer.twitter.com/en/docs/twitter-api/tweets/volume-streams/introduction)
 * **Kafka**: persistance and message queue
 * **Spark | Spark NLP**: distributed big data processing and NLP library. [Credits - Spark NLP John Snow Labs](https://www.johnsnowlabs.com/install/?utm_term=spark+nlp&utm_campaign=Search+%7C+Spark+NLP&utm_source=adwords&utm_medium=ppc&hsa_acc=7272492311&hsa_cam=12543136013&hsa_grp=140789592609&hsa_ad=605427101989&hsa_src=g&hsa_tgt=aud-1339356085647%3Akwd-314772722845&hsa_kw=spark+nlp&hsa_mt=e&hsa_net=adwords&hsa_ver=3&gclid=CjwKCAjwquWVBhBrEiwAt1KmwsM2wxOv4hTMe3dZUcPFepFLKKPEKRrCsPF8eYnL7pNgb9S4sbdOqxoCwkQQAvD_BwE)
-* **ElastiSearch**: shoudl I explain why?
+* **ElastiSearch**: should I explain why?
 * **Kibana**: great visualization tool
 # Configuration
 
