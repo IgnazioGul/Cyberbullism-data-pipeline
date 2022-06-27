@@ -29,7 +29,8 @@ es_mapping = {
         "properties": 
             {
                 "created_at": {"type": "date","format": "EEE MMM dd HH:mm:ss Z yyyy"},
-                "tweet_text": {"type": "text","fielddata": True}
+                "tweet_text": {"type": "text","fielddata": True},
+                "followers_count": {"type": "integer"}
             }
     }
 }
@@ -78,8 +79,7 @@ spark = SparkSession.builder\
 print("*********** Starting kafka stream to console ************")
 # create input DStream from kafka topic
 # startingOffest = "latest" for streaming, "earliest" for batch
-group_id = "consumer-group-spark-tap"
-mode = "earliest"
+mode = "latest"
 
 df = spark.readStream \
     .format("kafka") \
