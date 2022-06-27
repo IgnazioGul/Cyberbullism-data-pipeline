@@ -50,4 +50,4 @@ spark-submit --master spark://spark-master:7077 --packages org.apache.spark:spar
 
 # Credits
 If you could ever follow Technologies for Advanced Programming at Univeristy of Catania, **don't miss this great experience**.
-[Syllabus | Corso di laurea in Informatica L-31 (unict.it)](http://web.dmi.unict.it/corsi/l-31/insegnamenti/?cod=19115)
+[Syllabus | TECHNOLOGIES FOR ADVANCED PROGRAMMING (unict.it)](http://web.dmi.unict.it/corsi/l-31/insegnamenti/?cod=19115)
